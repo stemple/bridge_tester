@@ -4,22 +4,22 @@
  SparkFun Electronics
  Date: November 19th, 2014
  License: This code is public domain but you buy me a beer if you use this and we meet someday (Beerware license).
- 
+
  This example demonstrates basic scale output. See the calibration sketch to get the calibration_factor for your
  specific load cell setup.
- 
+
  This example code uses bogde's excellent library: https://github.com/bogde/HX711
  bogde's library is released under a GNU GENERAL PUBLIC LICENSE
- 
+
  The HX711 does one thing well: read load cells. The breakout board is compatible with any wheat-stone bridge
  based load cell which should allow a user to measure everything from a few grams to tens of tons.
  Arduino pin 2 -> HX711 CLK
  3 -> DAT
  5V -> VCC
  GND -> GND
- 
+
  The HX711 board can be powered from 2.7V to 5V so the Arduino 5V power should be fine.
- 
+
 */
 
 #include "HX711.h"
@@ -34,7 +34,7 @@
 #define DOUT1  10
 #define CLK1  11
 // load sensor 2
-#define DOUT2 3 
+#define DOUT2 3
 #define CLK2  2
 // load sensor 3
 #define DOUT3  9
@@ -53,7 +53,7 @@ float loadVals[] = {0,0,0,0};
 void setup() {
   Serial.begin(9600);
   Serial.println("HX711 scale demo");
-  
+
   scale1.set_scale(calibration_factor1); //This value is obtained by using the SparkFun_HX711_Calibration sketch
   scale2.set_scale(calibration_factor2); //This value is obtained by using the SparkFun_HX711_Calibration sketch
   scale3.set_scale(calibration_factor3); //This value is obtained by using the SparkFun_HX711_Calibration sketch
@@ -77,7 +77,7 @@ void loop() {
   //loadVals[1] = random(0,1000);
   //loadVals[2] = random(0,1000);
   //loadVals[3] = random(0,1000);
-  
+
   Serial.print(loadVals[0]);
   Serial.print(",");
   Serial.print(loadVals[1]);
