@@ -32,8 +32,12 @@ void setup()
 {
   font = createFont("Courier", 30);
   textFont(font);
-
-  String portName = Serial.list()[3]; 
+  
+  String ports[] = Serial.list();
+  String portName = Serial.list()[3];
+  for (int i = 0; i < ports.length; i++) {
+    println(ports[i]);
+  }
   //CAUTION: your Arduino port number is probably different! Mine happened to be 1. Use a "handshake" sketch to figure out and test which port number your Arduino is talking on. A "handshake" establishes that Arduino and Processing are listening/talking on the same port.
 
   myPort = new Serial(this, portName, 9600); //set up your port to listen to the serial port
@@ -72,7 +76,7 @@ void draw()
   //Check if we have a reading. If so, record it.
   if (val!= null) { 
     val = trim(val); //gets rid of any whitespace or Unicode nonbreakable space
-    //println(val); //Optional, useful for debugging. If you see this, you know data is being sent. Delete if  you like. 
+    println(val); //Optional, useful for debugging. If you see this, you know data is being sent. Delete if  you like. 
     float loadVals[] = float(split(val, ',')); //parses the packet from Arduino and places the valeus into the sensorVals array. I am assuming floats. Change the data type to match the datatype coming from Arduino. 
 
     if (loadVals.length == 4) {
@@ -98,7 +102,7 @@ void draw()
       if (goal2 == true) {
         println(". Goal 2 Acheived!");
         fill(0, 255, 0);
-        text("48 N Goal Achieved!", 10, 240);
+        text("98 N Goal Achieved!", 10, 240);
       } else if (goal1 == true) {
         println(". Goal 1 Acheived!");
         fill(255, 255, 0);
@@ -150,11 +154,25 @@ void keyPressed() {
     goal2 = false;
     ++fileCounter;
     table.clearRows();
+    // Write a to the arduino serial port to start
+    myPort.write('s');
+  }
+  if ((key == 'B') || (key == 'b') && start == false) {
+    // Write to the arduino serial port
+    myPort.write('b');
+  }
+  if ((key == 'R') || (key == 'r') && start == false) {
+    // Write to the arduino serial port
+    myPort.write('r');
+  }
+  if ((key == 'Z') || (key == 'z') && start == false) {
+    // Write to the arduino serial port
+    myPort.write('z');
   }
   if ((key == 'X') || (key == 'x') && start == true) {
     start = false;
+    myPort.write('x');
     fileName = str(year()) + str(month()) + str(day()) + str(minute()) + "-" + fileCounter + ".csv"; //this filename is of the form year+month+day+readingCounter
     saveTable(table, fileName); //Woo! save it to your computer. It is ready for all your spreadsheet dreams.
   }
 }
-

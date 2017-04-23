@@ -21,8 +21,9 @@
  The HX711 board can be powered from 2.7V to 5V so the Arduino 5V power should be fine.
 
 */
-
+#include <Wire.h>
 #include "HX711.h"
+#include <Adafruit_MotorShield.h>
 
 // #2 = -43980
 #define calibration_factor1 -43980.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
@@ -49,10 +50,16 @@ HX711 scale3(DOUT3, CLK3);
 HX711 scale4(DOUT4, CLK4);
 
 float loadVals[] = {0,0,0,0};
+char message;
+int steps = 0; //Counter for number of steps completed by stepper motor
+
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("HX711 scale demo");
+  AFMS.begin();
+  myMotor->setSpeed(20);
 
   scale1.set_scale(calibration_factor1); //This value is obtained by using the SparkFun_HX711_Calibration sketch
   scale2.set_scale(calibration_factor2); //This value is obtained by using the SparkFun_HX711_Calibration sketch
@@ -62,29 +69,56 @@ void setup() {
   scale2.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
   scale3.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
   scale4.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
-
-  Serial.println("Readings:");
 }
 
 void loop() {
-  loadVals[0] = scale1.get_units();
-  loadVals[1] = scale2.get_units();
-  loadVals[2] = scale3.get_units();
-  loadVals[3] = scale4.get_units();
+  if(Serial.available()){
+    message = Serial.read();
+  }
 
-  // for testing
-  //loadVals[0] = random(0,1000);
-  //loadVals[1] = random(0,1000);
-  //loadVals[2] = random(0,1000);
-  //loadVals[3] = random(0,1000);
+    if(message == 'x'){
+        //Serial.println(steps);
+        // Just stop.
+    } else if (message == 's'){
+      // Run the motor forward, read sensor values and then write to the serial port
+      myMotor->step(1, FORWARD, DOUBLE);
+      //Stepper will advance 1 step (360/200 = 1.8 deg/step) and advance steps counter
+      steps = steps + 1;
 
-  Serial.print(loadVals[0]);
-  Serial.print(",");
-  Serial.print(loadVals[1]);
-  Serial.print(",");
-  Serial.print(loadVals[2]);
-  Serial.print(",");
-  Serial.println(loadVals[3]);
-  delay(100);
-}
+      // Read the load sensor values
+      loadVals[0] = scale1.get_units();
+      loadVals[1] = scale2.get_units();
+      loadVals[2] = scale3.get_units();
+      loadVals[3] = scale4.get_units();
 
+      // for testing
+      //loadVals[0] = random(0,1000);
+      //loadVals[1] = random(0,1000);
+      //loadVals[2] = random(0,1000);
+      //loadVals[3] = random(0,1000);
+
+      // Using serial communication, send these values.
+      Serial.print(loadVals[0]);
+      Serial.print(",");
+      Serial.print(loadVals[1]);
+      Serial.print(",");
+      Serial.print(loadVals[2]);
+      Serial.print(",");
+      Serial.println(loadVals[3]);
+    } else if (message == 'b'){
+      // Go backwards
+      myMotor->step(1, BACKWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
+      steps = steps - 1;
+    } else if(message == 'r'){
+      // Go forwards
+      myMotor->step(steps, BACKWARD, DOUBLE);
+      steps = 0;
+    } else if(message == 'z'){
+      // Reset the counter (for purposes of "zeroing" the stepper
+      steps = 0;
+      //Serial.println(steps);
+    }
+
+    // Not sure what value is best here for a delay?
+    delay(100);
+  }
