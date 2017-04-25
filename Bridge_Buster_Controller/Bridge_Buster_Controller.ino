@@ -1,3 +1,7 @@
+
+
+#include <Q2HX711.h>
+
 /*
  Example using the SparkFun HX711 breakout board with a scale
  By: Nathan Seidle
@@ -22,8 +26,9 @@
 
 */
 #include <Wire.h>
-#include "HX711.h"
+#include <HX711.h>
 #include <Adafruit_MotorShield.h>
+
 
 // #2 = -43980
 #define calibration_factor1 -43980.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
@@ -79,11 +84,11 @@ void loop() {
     if(message == 'x'){
         //Serial.println(steps);
         // Just stop.
-    } else if (message == 's'){
+    } if (message == 's'){
       // Run the motor forward, read sensor values and then write to the serial port
-      myMotor->step(1, FORWARD, DOUBLE);
+      myMotor->step(2, BACKWARD, DOUBLE);
       //Stepper will advance 1 step (360/200 = 1.8 deg/step) and advance steps counter
-      steps = steps + 1;
+      steps = steps + 2;
 
       // Read the load sensor values
       loadVals[0] = scale1.get_units();
@@ -107,11 +112,11 @@ void loop() {
       Serial.println(loadVals[3]);
     } else if (message == 'b'){
       // Go backwards
-      myMotor->step(1, BACKWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
-      steps = steps - 1;
+      myMotor->step(2, FORWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
+      steps = steps - 2;
     } else if(message == 'r'){
-      // Go forwards
-      myMotor->step(steps, BACKWARD, DOUBLE);
+      // Go backwards to the zero position.
+      myMotor->step(steps, FORWARD, SINGLE);
       steps = 0;
     } else if(message == 'z'){
       // Reset the counter (for purposes of "zeroing" the stepper
