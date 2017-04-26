@@ -76,12 +76,12 @@ void loop() {
     message = Serial.read();
   }
 
-    if(message == 'x'){
+    if(message == 'p' || message == 'x'){
         //Serial.println(steps);
         // Just stop.
     } else if (message == 's'){
       // Run the motor forward, read sensor values and then write to the serial port
-      myMotor->step(1, FORWARD, DOUBLE);
+      myMotor->step(1, BACKWARD, DOUBLE);
       //Stepper will advance 1 step (360/200 = 1.8 deg/step) and advance steps counter
       steps = steps + 1;
 
@@ -107,11 +107,11 @@ void loop() {
       Serial.println(loadVals[3]);
     } else if (message == 'b'){
       // Go backwards
-      myMotor->step(1, BACKWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
+      myMotor->step(1, FORWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
       steps = steps - 1;
     } else if(message == 'r'){
       // Go forwards
-      myMotor->step(steps, BACKWARD, DOUBLE);
+      myMotor->step(steps, FORWARD, DOUBLE);
       steps = 0;
     } else if(message == 'z'){
       // Reset the counter (for purposes of "zeroing" the stepper
@@ -120,5 +120,5 @@ void loop() {
     }
 
     // Not sure what value is best here for a delay?
-    delay(100);
+    delay(10);
   }

@@ -26,7 +26,11 @@ boolean goal2 = false;
 String fileName;
 String val;
 boolean start = false;
+boolean pause = false;
 int fileCounter = 0;
+
+// for debugging
+float debugLoad = 0;
 
 void setup()
 {
@@ -58,7 +62,7 @@ void setup()
   table.addColumn("load3");
   table.addColumn("load4");
 
-  size(400, 300);
+  size(600, 400);
   background(0);
   //print(font.list());
 }
@@ -71,16 +75,18 @@ void draw()
   
   // Get value from Arduino. We will parse the data by each newline separator. 
   val = myPort.readStringUntil('\n');
-  //val = random(40) + ", " + random(20) + ", " + random(20) + ", " + random(20) + "\n";
+  // for debugging purposes
+  //val = debugLoad + ", " + debugLoad + ", " + debugLoad + ", " + debugLoad + "\n";
   
   //Check if we have a reading. If so, record it.
   if (val!= null) { 
     val = trim(val); //gets rid of any whitespace or Unicode nonbreakable space
-    println(val); //Optional, useful for debugging. If you see this, you know data is being sent. Delete if  you like. 
+    //println(val); //Optional, useful for debugging. If you see this, you know data is being sent. Delete if  you like. 
     float loadVals[] = float(split(val, ',')); //parses the packet from Arduino and places the valeus into the sensorVals array. I am assuming floats. Change the data type to match the datatype coming from Arduino. 
 
     if (loadVals.length == 4) {
       background(0);
+      // Calculate the total of all four sensors
       totalLoad = loadVals[0]+loadVals[1]+loadVals[2]+loadVals[3];
       if (totalLoad > loadGoal1 && totalLoad < loadGoal2) {
         goal1 = true;
@@ -88,8 +94,22 @@ void draw()
         goal1 = true;
         goal2 = true;
       }
+      fill(255, 255, 255);
+      text("Load 1 = " + loadVals[0], 10, 40);
+      text("Load 2 = " + loadVals[1], 10, 80);
+      text("Load 3 = " + loadVals[2], 10, 120);
+      text("Load 4 = " + loadVals[3], 10, 160);
+      text("Total = " + totalLoad, 10, 200);
+      if (goal2 == true) {
+        fill(0, 255, 0);
+        text("98 N Goal Achieved!", 10, 260);
+      } else if (goal1 == true) {
+        println(". Goal 1 Acheived!");
+        fill(255, 255, 0);
+        text("49 N Goal Achieved!", 10, 260);
+      }
 
-      // print them to the screen
+      if (start == true && pause == false) {
       print(loadVals[0]);
       print(", ");
       print(loadVals[1]);
@@ -99,23 +119,10 @@ void draw()
       println(loadVals[3]);
       print("Total = ");
       println(totalLoad);
-      if (goal2 == true) {
-        println(". Goal 2 Acheived!");
-        fill(0, 255, 0);
-        text("98 N Goal Achieved!", 10, 240);
-      } else if (goal1 == true) {
-        println(". Goal 1 Acheived!");
-        fill(255, 255, 0);
-        text("49 N Goal Achieved!", 10, 240);
-      }
-
-      text("Load 1 = " + loadVals[0], 10, 40);
-      text("Load 2 = " + loadVals[1], 10, 80);
-      text("Load 3 = " + loadVals[2], 10, 120);
-      text("Load 4 = " + loadVals[3], 10, 160);
-      text("Total = " + totalLoad, 10, 200);
-
-      if (start == true) {
+      
+        
+        
+        //debugLoad = debugLoad + .1;
 
         TableRow newRow = table.addRow(); //add a row for this new reading
         newRow.setInt("id", table.lastRowIndex());//record a unique identifier (the row's index)
@@ -134,45 +141,58 @@ void draw()
         newRow.setFloat("load3", loadVals[2]);
         newRow.setFloat("load4", loadVals[3]);
 
-        text("press x to stop", 10, 260);
+        text("press x to stop, p to pause", 10, 280);
+      } else if (pause == true) {
+        text("press p to continue", 10, 280);
       } else {
-        text("press s to start", 10, 260);
+        text("press s to start", 10, 300);
         goal1 = false;
         goal2 = false;
       }
     }
   } else {
-    //background(0);
-    text("Getting data....", 10, 290);
+    background(0);
+    text("Looking for data....", 10, 360);
   }
 }
 
 void keyPressed() {
   if ((key == 'S') || (key == 's') && start == false) {
     start = true;
-    goal1 = false;
-    goal2 = false;
+    pause = false;
     ++fileCounter;
     table.clearRows();
     // Write a to the arduino serial port to start
     myPort.write('s');
+    println("Sent start message to Arduino");
   }
   if ((key == 'B') || (key == 'b') && start == false) {
     // Write to the arduino serial port
     myPort.write('b');
-  }
-  if ((key == 'R') || (key == 'r') && start == false) {
-    // Write to the arduino serial port
-    myPort.write('r');
+    println("Sent backward message to Arduino");
   }
   if ((key == 'Z') || (key == 'z') && start == false) {
     // Write to the arduino serial port
     myPort.write('z');
+    println("Sent zero message to Arduino");
   }
-  if ((key == 'X') || (key == 'x') && start == true) {
-    start = false;
+  if ((key == 'P') || (key == 'p')) {
+    // Send a pause message to the Arduino
+    pause = !pause;
+    myPort.write('p');
+    println("Sent pause message to Arduino");
+  }
+  if ((key == 'X') || (key == 'x')) {
     myPort.write('x');
-    fileName = str(year()) + str(month()) + str(day()) + str(minute()) + "-" + fileCounter + ".csv"; //this filename is of the form year+month+day+readingCounter
-    saveTable(table, fileName); //Woo! save it to your computer. It is ready for all your spreadsheet dreams.
+    println("Sent stop message to Arduino");
+    //for debugging
+    debugLoad = 0;
+    if (start == true) {
+      start = false;
+      goal1 = false;
+      goal2 = false;
+      fileName = str(year()) + str(month()) + str(day()) + str(minute()) + "-" + fileCounter + ".csv"; //this filename is of the form year+month+day+readingCounter
+      saveTable(table, fileName); //Woo! save it to your computer. It is ready for all your spreadsheet dreams.
+    }
   }
 }
