@@ -22,5 +22,5 @@ The software that runs the system is broken into two parts:
 ## To Do:
 We want to improve this in several ways:
 - Add a visual indicator when the bridge fails.
-- Add a graph that updates in real time.
+- Add multiple data sets to the graph so that all the load sensors are visible.
 - Add GUI components for pausing, stopping, reversing, etc.
