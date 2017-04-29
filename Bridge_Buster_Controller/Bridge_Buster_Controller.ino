@@ -1,7 +1,3 @@
-
-
-#include <Q2HX711.h>
-
 /*
  Example using the SparkFun HX711 breakout board with a scale
  By: Nathan Seidle
@@ -57,6 +53,10 @@ HX711 scale4(DOUT4, CLK4);
 float loadVals[] = {0,0,0,0};
 char message;
 int steps = 0; //Counter for number of steps completed by stepper motor
+boolean paused = false;
+boolean started = false;
+boolean stopped = true;
+boolean reversed = false;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
@@ -79,12 +79,30 @@ void setup() {
 void loop() {
   if(Serial.available()){
     message = Serial.read();
+    if (message == 'p') {
+    paused = !paused;
+  } else if (message == 's') {
+    started = true;
+    stopped = false;
+    paused = false;
+    reversed = false;
+  } else if (message == 'x') {
+    started = false;
+    stopped = true;
+    paused = false;
+    reversed = false;
+  } else if (message == 'b') {
+    started = false;
+    stopped = false;
+    paused = false;
+    reversed = true;
+  }
   }
 
-    if(message == 'p' || message == 'x'){
+  if( paused || stopped){
         //Serial.println(steps);
         // Just stop.
-    } if (message == 's'){
+   } else if (started){
       // Run the motor forward, read sensor values and then write to the serial port
       myMotor->step(2, BACKWARD, DOUBLE);
       //Stepper will advance 1 step (360/200 = 1.8 deg/step) and advance steps counter
@@ -110,18 +128,11 @@ void loop() {
       Serial.print(loadVals[2]);
       Serial.print(",");
       Serial.println(loadVals[3]);
-    } else if (message == 'b'){
+    } else if (reversed){
       // Go backwards
+      Serial.print("Going backwards");
       myMotor->step(2, FORWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
       steps = steps - 2;
-    } else if(message == 'r'){
-      // Go backwards to the zero position.
-      myMotor->step(steps, FORWARD, SINGLE);
-      steps = 0;
-    } else if(message == 'z'){
-      // Reset the counter (for purposes of "zeroing" the stepper
-      steps = 0;
-      //Serial.println(steps);
     }
 
     // Not sure what value is best here for a delay?

@@ -7,9 +7,12 @@
  */
 
 import processing.serial.*;
+import org.gicentre.utils.stat.*;    // For chart classes.
 
 Serial myPort; //creates a software serial port on which you will listen to Arduino
-PFont font;
+XYChart lineChart;
+FloatList load_data = new FloatList();
+FloatList time_data = new FloatList();
 Table table = new Table(); //table where we will read in and store values. You can name it something more creative!
 
 int numReadings = 10; //keeps track of how many readings you'd like to take before writing the file. 
@@ -31,14 +34,32 @@ int fileCounter = 0;
 
 // for debugging
 float debugLoad = 0;
+int counter = 0;
 
 void setup()
 {
-  font = createFont("Courier", 30);
-  textFont(font);
-  
+  size(1000, 600);
+  textFont(createFont("Arial", 10), 10);
+
+  // Set up the chart
+  // Both x and y data set here.  
+  lineChart = new XYChart(this);
+
+  // Axis formatting and labels.
+  lineChart.showXAxis(true); 
+  lineChart.showYAxis(true); 
+  lineChart.setMinY(0);
+  lineChart.setMaxY(150);
+
+  // Symbol colours
+  lineChart.setPointColour(color(180, 50, 50, 100));
+  lineChart.setPointSize(5);
+  lineChart.setLineWidth(2);
+
+
   String ports[] = Serial.list();
   String portName = Serial.list()[3];
+
   for (int i = 0; i < ports.length; i++) {
     println(ports[i]);
   }
@@ -62,8 +83,6 @@ void setup()
   table.addColumn("load3");
   table.addColumn("load4");
 
-  size(600, 400);
-  background(0);
   //print(font.list());
 }
 
@@ -72,12 +91,12 @@ void serialEvent(Serial myPort) {
 
 void draw()
 {
-  
+  background(255);
   // Get value from Arduino. We will parse the data by each newline separator. 
-  val = myPort.readStringUntil('\n');
+  //val = myPort.readStringUntil('\n');
   // for debugging purposes
-  //val = debugLoad + ", " + debugLoad + ", " + debugLoad + ", " + debugLoad + "\n";
-  
+  val = debugLoad + ", " + debugLoad + ", " + debugLoad + ", " + debugLoad + "\n";
+
   //Check if we have a reading. If so, record it.
   if (val!= null) { 
     val = trim(val); //gets rid of any whitespace or Unicode nonbreakable space
@@ -85,7 +104,6 @@ void draw()
     float loadVals[] = float(split(val, ',')); //parses the packet from Arduino and places the valeus into the sensorVals array. I am assuming floats. Change the data type to match the datatype coming from Arduino. 
 
     if (loadVals.length == 4) {
-      background(0);
       // Calculate the total of all four sensors
       totalLoad = loadVals[0]+loadVals[1]+loadVals[2]+loadVals[3];
       if (totalLoad > loadGoal1 && totalLoad < loadGoal2) {
@@ -94,35 +112,46 @@ void draw()
         goal1 = true;
         goal2 = true;
       }
-      fill(255, 255, 255);
-      text("Load 1 = " + loadVals[0], 10, 40);
-      text("Load 2 = " + loadVals[1], 10, 80);
-      text("Load 3 = " + loadVals[2], 10, 120);
-      text("Load 4 = " + loadVals[3], 10, 160);
-      text("Total = " + totalLoad, 10, 200);
+      fill(120);
+      textSize(15);
+      text("Load 1 = " + loadVals[0], 10, height - 100);
+      text("Load 2 = " + loadVals[1], 210, height - 100);
+      text("Load 3 = " + loadVals[2], 410, height - 100);
+      text("Load 4 = " + loadVals[3], 610, height - 100);
+      text("Total = " + totalLoad, 10, height - 50);
       if (goal2 == true) {
-        fill(0, 255, 0);
-        text("98 N Goal Achieved!", 10, 260);
+        text("98 N Goal Achieved!", 10, height - 20);
       } else if (goal1 == true) {
         println(". Goal 1 Acheived!");
-        fill(255, 255, 0);
-        text("49 N Goal Achieved!", 10, 260);
+        text("49 N Goal Achieved!", 10, height - 20);
       }
+      textSize(9);
+      lineChart.draw(20, 50, width-30, height-200);
 
       if (start == true && pause == false) {
-      print(loadVals[0]);
-      print(", ");
-      print(loadVals[1]);
-      print(", ");
-      print(loadVals[2]);
-      print(", ");
-      println(loadVals[3]);
-      print("Total = ");
-      println(totalLoad);
-      
-        
-        
-        //debugLoad = debugLoad + .1;
+        load_data.append(totalLoad);
+        time_data.append(counter++);
+        lineChart.setData(time_data.array(), load_data.array());
+        // Draw a title over the top of the chart.
+        fill(120);
+        textSize(20);
+        text("Total Load", 70, 70);
+        textSize(11);
+        text("Newtons", 
+          70, 85);
+        print(loadVals[0]);
+        print(", ");
+        print(loadVals[1]);
+        print(", ");
+        print(loadVals[2]);
+        print(", ");
+        println(loadVals[3]);
+        print("Total = ");
+        println(totalLoad);
+
+
+
+        debugLoad = debugLoad + random(-1, 5)*.01;
 
         TableRow newRow = table.addRow(); //add a row for this new reading
         newRow.setInt("id", table.lastRowIndex());//record a unique identifier (the row's index)
@@ -140,18 +169,21 @@ void draw()
         newRow.setFloat("load2", loadVals[1]);
         newRow.setFloat("load3", loadVals[2]);
         newRow.setFloat("load4", loadVals[3]);
-
-        text("press x to stop, p to pause", 10, 280);
+        textSize(20);
+        text("press x to stop, p to pause", 20, 20);
       } else if (pause == true) {
-        text("press p to continue", 10, 280);
+        textSize(20);
+        text("press p to continue", 20, 20);
       } else {
-        text("press s to start", 10, 300);
+        textSize(20);
+        text("press s to start", 20, 20);
         goal1 = false;
         goal2 = false;
       }
     }
   } else {
-    background(0);
+    //background(0);
+    textSize(10);
     text("Looking for data....", 10, 360);
   }
 }
@@ -180,6 +212,7 @@ void keyPressed() {
     // Send a pause message to the Arduino
     pause = !pause;
     myPort.write('p');
+    println("pause = " + pause);
     println("Sent pause message to Arduino");
   }
   if ((key == 'X') || (key == 'x')) {
@@ -187,6 +220,10 @@ void keyPressed() {
     println("Sent stop message to Arduino");
     //for debugging
     debugLoad = 0;
+    totalLoad = 0;
+    counter = 0;
+    load_data.clear();
+    time_data.clear();
     if (start == true) {
       start = false;
       goal1 = false;
