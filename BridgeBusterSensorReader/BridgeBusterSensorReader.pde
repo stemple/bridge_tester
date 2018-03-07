@@ -10,8 +10,11 @@ import processing.serial.*;
 import org.gicentre.utils.stat.*;    // For chart classes.
 
 Serial myPort; //creates a software serial port on which you will listen to Arduino
-XYChart lineChart;
-FloatList load_data = new FloatList();
+XYChart[] charts;
+FloatList load_data1 = new FloatList();
+FloatList load_data2 = new FloatList();
+FloatList load_data3 = new FloatList();
+FloatList load_data4 = new FloatList();
 FloatList time_data = new FloatList();
 Table table = new Table(); //table where we will read in and store values. You can name it something more creative!
 
@@ -26,6 +29,9 @@ float totalLoad;
 boolean goal1 = false;
 boolean goal2 = false;
 
+boolean goal1Passed = false;
+boolean goal2Passed = false;
+
 String fileName;
 String val;
 boolean start = false;
@@ -38,23 +44,26 @@ int counter = 0;
 
 void setup()
 {
-  size(1000, 600);
+  size(1000, 800);
   textFont(createFont("Arial", 10), 10);
 
-  // Set up the chart
+  // Set up the charts
   // Both x and y data set here.  
-  lineChart = new XYChart(this);
+  charts = new XYChart[4];
 
-  // Axis formatting and labels.
-  lineChart.showXAxis(true); 
-  lineChart.showYAxis(true); 
-  lineChart.setMinY(0);
-  lineChart.setMaxY(150);
+  for (int i = 0; i < 4; i++) {
+    charts[i] = new XYChart(this);
+    // Axis formatting and labels.
+    charts[i].showXAxis(true); 
+    charts[i].showYAxis(true); 
+    charts[i].setMinY(0);
+    charts[i].setMaxY(50);
 
-  // Symbol colours
-  lineChart.setPointColour(color(180, 50, 50, 100));
-  lineChart.setPointSize(5);
-  lineChart.setLineWidth(2);
+    // Symbol colours
+    charts[i].setPointColour(color(180, 50, 50, 100));
+    charts[i].setPointSize(5);
+    charts[i].setLineWidth(2);
+  }
 
 
   String ports[] = Serial.list();
@@ -112,33 +121,54 @@ void draw()
         goal1 = true;
         goal2 = true;
       }
+      
+      int chartwidth = (width/2)-20;
+      int chartheight = (height/2)-100;
+      if(goal1 == true) {
+        fill(255, 255, 0);
+        rect(5, height-60, width-10, 50, 5);
+      }if(goal2 == true) {
+        fill(0, 255, 0);
+        rect(5, height-60, width-10, 50, 5);
+      }
       fill(120);
       textSize(15);
-      text("Load 1 = " + loadVals[0], 10, height - 100);
-      text("Load 2 = " + loadVals[1], 210, height - 100);
-      text("Load 3 = " + loadVals[2], 410, height - 100);
-      text("Load 4 = " + loadVals[3], 610, height - 100);
-      text("Total = " + totalLoad, 10, height - 50);
-      if (goal2 == true) {
+      text("Load 1 = " + loadVals[0], 50, chartheight + 75);
+      text("Load 2 = " + loadVals[1], chartwidth+ 50, chartheight + 75);
+      text("Load 3 = " + loadVals[2], 50, chartheight*2 + 125);
+      text("Load 4 = " + loadVals[3], chartwidth+50, chartheight*2 + 125);
+      textSize(20);
+      fill(0);
+      text("Total Load = " + totalLoad + " Newtons", 100, height-20);
+      if (goal2 == true && goal2Passed == false) {
         text("98 N Goal Achieved!", 10, height - 20);
-      } else if (goal1 == true) {
+        pause = true;
+        goal2Passed = true;
+      } else if (goal1 == true && goal1Passed == false) {
         println(". Goal 1 Acheived!");
         text("49 N Goal Achieved!", 10, height - 20);
+        pause = true;
+        goal1Passed = true;
       }
       textSize(9);
-      lineChart.draw(20, 50, width-30, height-200);
+      
+      charts[0].draw(10, 50, chartwidth, chartheight);
+      charts[1].draw(chartwidth + 10, 50, chartwidth, chartheight);
+      charts[2].draw(10, chartheight+100, chartwidth, chartheight);
+      charts[3].draw(chartwidth + 10, chartheight+100, chartwidth, chartheight);
 
       if (start == true && pause == false) {
-        load_data.append(totalLoad);
+        load_data1.append(loadVals[0]);
+        load_data2.append(loadVals[1]);
+        load_data3.append(loadVals[2]);
+        load_data4.append(loadVals[3]);
         time_data.append(counter++);
-        lineChart.setData(time_data.array(), load_data.array());
-        // Draw a title over the top of the chart.
-        fill(120);
-        textSize(20);
-        text("Total Load", 70, 70);
-        textSize(11);
-        text("Newtons", 
-          70, 85);
+        charts[0].setData(time_data.array(), load_data1.array());
+        charts[1].setData(time_data.array(), load_data2.array());
+        charts[2].setData(time_data.array(), load_data3.array());
+        charts[3].setData(time_data.array(), load_data4.array());
+        
+        // Send data to serial
         print(loadVals[0]);
         print(", ");
         print(loadVals[1]);
@@ -149,12 +179,10 @@ void draw()
         print("Total = ");
         println(totalLoad);
 
-
-
         debugLoad = debugLoad + random(-1, 5)*.01;
 
         TableRow newRow = table.addRow(); //add a row for this new reading
-        newRow.setInt("id", table.lastRowIndex());//record a unique identifier (the row's index)
+        newRow.setInt("id", table.lastRowIndex());//record a unique identifier (the row's index) //<>//
 
         //record time stamp
         //newRow.setInt("year", year());
@@ -222,7 +250,10 @@ void keyPressed() {
     debugLoad = 0;
     totalLoad = 0;
     counter = 0;
-    load_data.clear();
+    load_data1.clear();
+    load_data2.clear();
+    load_data3.clear();
+    load_data4.clear();
     time_data.clear();
     if (start == true) {
       start = false;
