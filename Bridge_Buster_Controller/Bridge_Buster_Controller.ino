@@ -27,7 +27,7 @@
 
 
 // #2 = -43980
-#define calibration_factor1 -43980.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
+#define calibration_factor1 -42100.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
 #define calibration_factor2 -41520.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
 #define calibration_factor3 -44280.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
 #define calibration_factor4 -44580.0 //This value is obtained using the SparkFun_HX711_Calibration sketch

@@ -91,14 +91,14 @@ void serialEvent(Serial myPort) {
 
 void draw()
 {
-  background(255);
   // Get value from Arduino. We will parse the data by each newline separator. 
   //val = myPort.readStringUntil('\n');
   // for debugging purposes
   val = debugLoad + ", " + debugLoad + ", " + debugLoad + ", " + debugLoad + "\n";
 
   //Check if we have a reading. If so, record it.
-  if (val!= null) { 
+  if (val!= null) {
+    background(255);
     val = trim(val); //gets rid of any whitespace or Unicode nonbreakable space
     //println(val); //Optional, useful for debugging. If you see this, you know data is being sent. Delete if  you like. 
     float loadVals[] = float(split(val, ',')); //parses the packet from Arduino and places the valeus into the sensorVals array. I am assuming floats. Change the data type to match the datatype coming from Arduino. 
@@ -184,7 +184,7 @@ void draw()
   } else {
     //background(0);
     textSize(10);
-    text("Looking for data....", 10, 360);
+    text("Looking for data....", 20, 40);
   }
 }
 
