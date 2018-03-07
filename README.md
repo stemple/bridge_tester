@@ -11,6 +11,9 @@ This is the design and code for the bridge tester that we use for testing studen
 The design of the bridge tester was created using Autodesk Fusion 360 and you can see and even download the project here:
 http://a360.co/2oUvVD8
 
+## The PCB and circuit diagram
+The four sensors are combined together in a small PCB. I have included the PCB design file and the circuit diagram in the folder PCB Design.
+
 ## The Software
 The software that runs the system is broken into two parts:
 
