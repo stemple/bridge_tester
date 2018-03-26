@@ -44,7 +44,7 @@ int counter = 0;
 
 void setup()
 {
-  size(800, 800);
+  size(800, 600);
   textFont(createFont("Courier", 10), 10);
 
   // Set up the charts

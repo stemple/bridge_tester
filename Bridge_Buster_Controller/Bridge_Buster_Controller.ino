@@ -45,8 +45,8 @@
 #define DOUT4  4
 #define CLK4  5
 
-HX711 scale1(DOUT1, CLK1);
-HX711 scale2(DOUT2, CLK2);
+HX711 scale2(DOUT1, CLK1);
+HX711 scale1(DOUT2, CLK2);
 HX711 scale3(DOUT3, CLK3);
 HX711 scale4(DOUT4, CLK4);
 
@@ -104,6 +104,7 @@ void loop() {
         // Just stop.
    } else if (started){
       // Run the motor forward, read sensor values and then write to the serial port
+      myMotor->setSpeed(20);
       myMotor->step(2, BACKWARD, DOUBLE);
       //Stepper will advance 1 step (360/200 = 1.8 deg/step) and advance steps counter
       steps = steps + 2;
@@ -130,9 +131,10 @@ void loop() {
       Serial.println(loadVals[3]);
     } else if (reversed){
       // Go backwards
-      Serial.print("Going backwards");
-      myMotor->step(2, FORWARD, SINGLE); //Stepper will reverse 1 step (360/200 = 1.8 deg/step) and regress steps counter
-      steps = steps - 2;
+      Serial.println("Going backwards");
+      myMotor->setSpeed(200); // Faster speed t reverse
+      myMotor->step(2, FORWARD, SINGLE); //Stepper will reverse 2 steps (360/200 = 1.8 deg/step) and regress steps counter
+      steps = steps - 20;
     }
 
     // Not sure what value is best here for a delay?
