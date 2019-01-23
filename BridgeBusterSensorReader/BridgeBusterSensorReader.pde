@@ -57,7 +57,7 @@ void setup()
     charts[i].showXAxis(true); 
     charts[i].showYAxis(true); 
     charts[i].setMinY(0);
-    charts[i].setMaxY(50);
+    charts[i].setMaxY(70);
 
     // Symbol colours
     charts[i].setPointColour(color(180, 50, 50, 100));
@@ -146,12 +146,12 @@ void draw()
       text("Total Load = " + totalLoad + " Newtons", width/2 - 200, height-30);
       if (goal2 == true && goal2Passed == false) {
         text("98 N Goal Achieved!", 10, height - 20);
-        pause();
+        //pause();
         goal2Passed = true;
       } else if (goal1 == true && goal1Passed == false) {
         println(". Goal 1 Acheived!");
         text("49 N Goal Achieved!", 10, height - 20);
-        pause();
+        //pause();
         goal1Passed = true;
       }
       textSize(9);
